@@ -157,4 +157,4 @@ void *thread2_fnt(struct info *nfo);
 ​ ​*/
 int main();
 
-#endif //MAIN_H
+#endif

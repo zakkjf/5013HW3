@@ -128,3 +128,70 @@ Thread 2 : Exiting
 Thread 2 End : 02/18/2018 18:27:54
 Thread Main : Exiting
 Thread Main End : 02/18/2018 18:27:54
+Thread Main : Thread Main
+Thread Main : Linux Thread ID: 33232 POSIX Thread ID: 33232
+Thread Main Start : 02/18/2018 19:02:25
+Thread 1 Start : 02/18/2018 19:02:25
+Thread 2 Start : 02/18/2018 19:02:25
+Thread 1 : Thread 1 Enter
+Thread 1 : Linux Thread ID: 33233 POSIX Thread ID: 33232
+Thread 2 : Thread 2 Enter
+Thread 2 : Linux Thread ID: 33234 POSIX Thread ID: 33232
+Thread 2 : CPU: 36.666667
+Thread 2 : CPU: 45.161290
+Thread 2 : CPU: 43.333333
+Thread 2 : CPU: 34.482759
+Thread 1 : End of file reached
+Thread 1 : Exiting
+Thread 1 End : 02/18/2018 19:02:26
+Thread 2 : CPU: 40.000000
+Thread 2 : CPU: 16.129032
+Thread 2 : CPU: 6.451613
+Thread 2 : CPU: 27.586207
+Thread 2 : CPU: 24.137931
+Thread 2 : CPU: 6.666667
+Thread 2 : CPU: 24.137931
+Thread 2 : CPU: 24.137931
+Thread 2 : CPU: 3.333333
+Thread 2 : CPU: 20.000000
+Thread 2 : CPU: 23.333333
+Thread 2 : CPU: 3.448276
+Thread 2 : CPU: 29.032258
+Thread 2 : CPU: 25.000000
+Thread 2 : CPU: 9.375000
+Thread 2 : CPU: 24.137931
+Thread 2 : CPU: 26.666667
+Thread 2 : CPU: 3.333333
+Thread 2 : CPU: 25.806452
+Thread 2 : CPU: 27.586207
+Thread 2 : CPU: 6.666667
+Thread 2 : CPU: 28.125000
+Thread 2 : CPU: 24.137931
+Thread 2 : CPU: 6.666667
+Thread 2 : CPU: 27.586207
+Thread 2 : CPU: 27.586207
+Thread 2 : CPU: 0.000000
+Thread 2 : CPU: 24.137931
+Thread 2 : CPU: 24.137931
+Thread 2 : CPU: 9.677419
+Thread 2 : CPU: 23.333333
+Thread 2 : CPU: 24.137931
+Thread 2 : CPU: 3.448276
+Thread 2 : CPU: 22.580645
+Thread 2 : CPU: 24.137931
+Thread 2 : CPU: 9.677419
+Thread 2 : CPU: 20.689655
+Thread 2 : CPU: 20.689655
+Thread 2 : CPU: 6.896552
+Thread 2 : CPU: 24.137931
+Thread 2 : CPU: 24.137931
+Thread 2 : CPU: 3.333333
+Thread 2 : CPU: 17.241379
+Thread 2 : CPU: 23.333333
+Thread 2 : CPU: 6.666667
+Thread 2 : CPU: 25.806452
+Thread 2 : CPU: 24.137931
+Thread 2 : CPU: 3.448276
+Thread 2 : CPU: 23.333333
+Thread 2 : CPU: 25.806452
+Thread 2 : CPU: 13.793103

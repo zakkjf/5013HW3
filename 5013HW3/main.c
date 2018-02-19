@@ -30,9 +30,11 @@
 #include <sys/stat.h>
 #include <stdarg.h>
 #include <sys/syscall.h>
+#include <time.h>
 #include "dll.h"
 #include "main.h"
 
+#define _GNU_SOURCE
 #define FILEPATH "log.txt"
 #define FILEPATH2 "random.txt"
 #define FILEPATH3 "/proc/stat"
@@ -177,10 +179,10 @@ int sync_log_id(char* filename, char* thread)
 
 	fp = fopen (filename, "a");
 
-	fprintf(fp, thread);
-	fprintf(fp, " : ");
-	fprintf(fp, "Linux Thread ID: %d POSIX Thread ID: %d",tid,pid);
-	fprintf(fp, "\n");
+	fprintf(fp,"%s", thread);
+	fprintf(fp,"%s"," : ");
+	fprintf(fp,"Linux Thread ID: %d POSIX Thread ID: %d",tid,pid);
+	fprintf(fp,"%s","\n");
 	//Flush file output
 	fflush(fp);
 
@@ -208,10 +210,10 @@ int sync_logwrite(char* filename, char* thread, char* log)
 
 	fp = fopen (filename, "a");
 
-	fprintf(fp, thread);
-	fprintf(fp, " : ");
-	fprintf(fp, log);
-	fprintf(fp, "\n");
+	fprintf(fp,"%s", thread);
+	fprintf(fp,"%s", " : ");
+	fprintf(fp,"%s", log);
+	fprintf(fp,"%s", "\n");
 	//Flush file output
 	fflush(fp);
 
@@ -236,19 +238,20 @@ void *thread1_fnt(struct info *nfo)
 {
     sync_logwrite(nfo->logfile,"Thread 1","Thread 1 Enter");
     sync_log_id(nfo->logfile,"Thread 1");
+
+    char ch;
+    int i;
+    Node * alphanode = create(0);
+
+    int alphalog[26];
     FILE * fp;
     fp = fopen(nfo->infile, "r");
 
     if(fp==NULL)
     {
         sync_printf("File handle doesn't seem to exist");
-        return -1;
+ 	sync_logwrite(nfo->logfile,"Thread 1","Input File Error");
     }
-    char ch;
-    int i;
-    Node * alphanode = create(0);
-
-    int alphalog[26];
 
     for(i=0;i<26;i++)
     {
@@ -309,14 +312,14 @@ void *thread1_fnt(struct info *nfo)
 ​ ​*/
 void *thread2_fnt(struct info *nfo)
 {
+FILE *fp2;
+struct timespec tim, tim2;
+long double first[4], second[4], loadavg;
+char cpubuf[20];
 
 sync_logwrite(nfo->logfile,"Thread 2","Thread 2 Enter");
 sync_log_id(nfo->logfile,"Thread 2");
 
-FILE *fp2;
-long double first[4], second[4], loadavg;
-
-struct timespec tim, tim2;
 tim.tv_sec = 0;
 tim.tv_nsec = 100000000l; //100ms
 
@@ -334,8 +337,8 @@ while(1)
 
     loadavg = 100*((second[0]+second[1]+second[2]) - (first[0]+first[1]+first[2])) / ((second[0]+second[1]+second[2]+second[3]) - (first[0]+first[1]+first[2]+first[3]));
 
-    char cpubuf[20];
-    sprintf(cpubuf,"CPU: %Lf\%",loadavg);
+ 
+    sprintf(cpubuf,"CPU: %Lf",loadavg);
     sync_printf(cpubuf);
     sync_printf("\n");
     sync_logwrite(nfo->logfile,"Thread 2",cpubuf);
@@ -382,7 +385,7 @@ int main()
 
     /* create a first thread which executes thread1_fnt(&x) */
     sync_timetag(nfo->logfile,"Thread 1 Start");
-    if(pthread_create(&thread1, NULL, thread1_fnt, nfo)) {
+    if(pthread_create(&thread1, NULL, (void *)thread1_fnt, nfo)) {
 
         fprintf(stderr, "Error creating Thread 1\n");
         return 1;
@@ -390,7 +393,7 @@ int main()
     }
         /* create a second thread which executes thread2_fnt(&x) */
     sync_timetag(nfo->logfile,"Thread 2 Start");
-    if(pthread_create(&thread2, NULL, thread2_fnt, nfo)) {
+    if(pthread_create(&thread2, NULL, (void *)thread2_fnt, nfo)) {
 
         fprintf(stderr, "Error creating Thread 2\n");
         return 1;
