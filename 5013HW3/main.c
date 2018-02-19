@@ -37,13 +37,13 @@
 #define FILEPATH2 "random.txt"
 #define FILEPATH3 "/proc/stat"
 
-static FILE *fp;
+FILE *fp;
 
-static pthread_t thread1;
-static pthread_t thread2;
+pthread_t thread1;
+pthread_t thread2;
 
-static pthread_mutex_t printf_mutex;
-static pthread_mutex_t log_mutex;
+pthread_mutex_t printf_mutex;
+pthread_mutex_t log_mutex;
 
 /**
 ​ ​*​ ​@brief​ ​Synchronous encapsulator for printf
@@ -110,19 +110,21 @@ void sig_handler(int sig)
 ​ ​*​ ​@param​ msg message to accompany timestamp
 ​ ​*​ ​@return​ void
 ​ ​*/
-int sync_timetag(char * msg)
+int sync_timetag(char * filename, char * msg)
 {
     time_t timer;
-    char buffer[26];
+    char buffer[25];
     struct tm* time_inf;
 
     time(&timer);
 
     time_inf = localtime(&timer);
-    strftime(buffer, 26, "%m/%d/%Y %H:%M:%S\n", time_inf);
+    strftime(buffer, 25, "%m/%d/%Y %H:%M:%S", time_inf);
     sync_printf(msg);
+    sync_logwrite(filename,msg,buffer);
     sync_printf(": ");
     sync_printf(buffer);
+    sync_printf("\n");
     return 0;
 }
 
@@ -232,7 +234,7 @@ int sync_logwrite(char* filename, char* thread, char* log)
 ​ ​*/
 void *thread1_fnt(struct info *nfo)
 {
-    sync_logwrite(nfo->logfile,"Thread 1","Thread 1");
+    sync_logwrite(nfo->logfile,"Thread 1","Thread 1 Enter");
     sync_log_id(nfo->logfile,"Thread 1");
     FILE * fp;
     fp = fopen(nfo->infile, "r");
@@ -281,9 +283,15 @@ void *thread1_fnt(struct info *nfo)
 
 
     if (feof(fp))
-        printf("\n End of file reached.");
+    {
+        sync_printf("End of file reached\n");
+        sync_logwrite(nfo->logfile,"Thread 1","End of file reached");
+    }
     else
-        printf("\n Something went wrong.");
+    {
+        sync_printf("End of file Error\n");
+        sync_logwrite(nfo->logfile,"Thread 1","End of file Error");
+    }
 
     fclose(fp);
 
@@ -302,7 +310,7 @@ void *thread1_fnt(struct info *nfo)
 void *thread2_fnt(struct info *nfo)
 {
 
-sync_logwrite(nfo->logfile,"Thread 2","Thread 2");
+sync_logwrite(nfo->logfile,"Thread 2","Thread 2 Enter");
 sync_log_id(nfo->logfile,"Thread 2");
 
 FILE *fp2;
@@ -325,7 +333,12 @@ while(1)
     fclose(fp2);
 
     loadavg = 100*((second[0]+second[1]+second[2]) - (first[0]+first[1]+first[2])) / ((second[0]+second[1]+second[2]+second[3]) - (first[0]+first[1]+first[2]+first[3]));
-    sync_printf("CPU: %Lf\%\n",loadavg);
+
+    char cpubuf[20];
+    sprintf(cpubuf,"CPU: %Lf\%",loadavg);
+    sync_printf(cpubuf);
+    sync_printf("\n");
+    sync_logwrite(nfo->logfile,"Thread 2",cpubuf);
 }
 
 return NULL;
@@ -364,11 +377,11 @@ int main()
 
     sync_logwrite(nfo->logfile,"Thread Main","Thread Main");
     sync_log_id(nfo->logfile,"Thread Main");
-    sync_timetag("Thread Main Start");
+    sync_timetag(nfo->logfile,"Thread Main Start");
 
 
     /* create a first thread which executes thread1_fnt(&x) */
-    sync_timetag("Thread 1 Start");
+    sync_timetag(nfo->logfile,"Thread 1 Start");
     if(pthread_create(&thread1, NULL, thread1_fnt, nfo)) {
 
         fprintf(stderr, "Error creating Thread 1\n");
@@ -376,7 +389,7 @@ int main()
 
     }
         /* create a second thread which executes thread2_fnt(&x) */
-    sync_timetag("Thread 2 Start");
+    sync_timetag(nfo->logfile,"Thread 2 Start");
     if(pthread_create(&thread2, NULL, thread2_fnt, nfo)) {
 
         fprintf(stderr, "Error creating Thread 2\n");
@@ -395,7 +408,7 @@ int main()
     else
     {
         sync_logwrite(nfo->logfile,"Thread 1","Exiting");
-        sync_timetag("Thread 1 End");
+        sync_timetag(nfo->logfile,"Thread 1 End");
     }
 
     if(pthread_join(thread2, NULL)) {
@@ -407,11 +420,11 @@ int main()
     else
     {
         sync_logwrite(nfo->logfile,"Thread 2","Exiting");
-        sync_timetag("Thread 2 End");
+        sync_timetag(nfo->logfile,"Thread 2 End");
     }
 
     sync_logwrite(nfo->logfile,"Thread Main","Exiting");
-    sync_timetag("Thread Main End");
+    sync_timetag(nfo->logfile,"Thread Main End");
     free(nfo); //free nfo struct memory
     return 0;
 }

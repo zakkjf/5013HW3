@@ -28,7 +28,14 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #include <stdarg.h>
+#include <sys/syscall.h>
+#include "dll.h"
+#include "main.h"
 
 
 #define FILEPATH "log.txt"
@@ -71,10 +78,11 @@ void sig_handler(int sig);
 ​ ​*
 ​ ​*​ ​Synchronously prints a timestamp to the console
 ​ ​*
-​ ​*​ ​@param​ msg message to accompany timestamp
+​ ​*​ ​@param filename log filename
+ * @param​ msg message to accompany timestamp
 ​ ​*​ ​@return​ void
 ​ ​*/
-int sync_timetag(char * msg);
+int sync_timetag(char * filename, char * msg);
 
 /**
 ​ ​*​ ​@brief​ Tracks alphanumeric characters into counting bins
