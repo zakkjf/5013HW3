@@ -395,3 +395,10 @@ Thread 2 : Linux Thread ID: 31435 POSIX Thread ID: 31433
 Thread 1 : Thread 1
 Thread 1 : Linux Thread ID: 31434 POSIX Thread ID: 31433
 Thread 1 : Successfully joined
+Thread Main : Thread Main
+Thread Main : Linux Thread ID: 31758 POSIX Thread ID: 31758
+Thread 1 : Thread 1
+Thread 1 : Linux Thread ID: 31759 POSIX Thread ID: 31758
+Thread 2 : Thread 2
+Thread 2 : Linux Thread ID: 31760 POSIX Thread ID: 31758
+Thread 1 : Successfully joined

@@ -31,16 +31,11 @@
 #include <stdarg.h>
 #include <sys/syscall.h>
 #include "dll.h"
+#include "main.h"
 
 #define FILEPATH "log.txt"
 #define FILEPATH2 "random.txt"
 #define FILEPATH3 "/proc/stat"
-
-struct info{
-	char * logfile;
-	char * infile;
-	char * procstat;
-};
 
 static FILE *fp;
 
@@ -89,7 +84,7 @@ void sig_handler(int sig)
     if (sig == SIGUSR1)
     {
         //exit threads. Cannot distinguish between threads when force-sending signals
-        sync_logwrite(FILEPATH,"Received SIGUSR1");
+        sync_logwrite(FILEPATH,"All Threads", "Received SIGUSR1");
         //thread-specific handling in thread_join component of main
         pthread_cancel(thread1);
         pthread_cancel(thread2);
@@ -98,7 +93,7 @@ void sig_handler(int sig)
     if (sig == SIGUSR2)
     {
         //exit threads. Cannot distinguish between threads when force-sending signals
-        sync_logwrite(FILEPATH,"Received SIGUSR2");
+        sync_logwrite(FILEPATH,"All Threads", "Received SIGUSR2");
         //thread-specific handling in thread_join component of main
         pthread_cancel(thread1);
         pthread_cancel(thread2);
