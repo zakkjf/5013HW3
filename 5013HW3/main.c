@@ -394,7 +394,7 @@ int main()
     }
     else
     {
-        sync_logwrite(nfo->logfile,"Thread 1","Successfully joined");
+        sync_logwrite(nfo->logfile,"Thread 1","Exiting");
         sync_timetag("Thread 1 End");
     }
 
@@ -406,11 +406,11 @@ int main()
     }
     else
     {
-        sync_logwrite(nfo->logfile,"Thread 2","Successfully joined");
+        sync_logwrite(nfo->logfile,"Thread 2","Exiting");
         sync_timetag("Thread 2 End");
     }
 
-    sync_logwrite(nfo->logfile,"Thread Main","Complete");
+    sync_logwrite(nfo->logfile,"Thread Main","Exiting");
     sync_timetag("Thread Main End");
     free(nfo); //free nfo struct memory
     return 0;
