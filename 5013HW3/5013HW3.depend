@@ -1,0 +1,23 @@
+# depslib dependency file v1.0
+1519001619 source:/home/razor2/dev/5013HW3/5013HW3/main.c
+	<pthread.h>
+	<stdio.h>
+	<stdlib.h>
+	<fcntl.h>
+	<signal.h>
+	<unistd.h>
+	<sys/stat.h>
+	<stdarg.h>
+	<sys/syscall.h>
+	"dll.h"
+
+1518818496 source:/home/razor2/dev/5013HW3/5013HW3/dll.c
+	<stdio.h>
+	<stdlib.h>
+	<stdint.h>
+	<stddef.h>
+	"dll.h"
+
+1518733759 /home/razor2/dev/5013HW3/5013HW3/dll.h
+	<stdint.h>
+
