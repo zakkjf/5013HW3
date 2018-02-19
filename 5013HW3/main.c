@@ -1,3 +1,26 @@
+/*****************************************************************************
+​ ​*​ ​Copyright​ ​(C)​ ​2018 ​by​ Zach Farmer
+​ ​*
+​ ​*​ ​Redistribution,​ ​modification​ ​or​ ​use​ ​of​ ​this​ ​software​ ​in​ ​source​ ​or​ ​binary
+​ ​*​ ​forms​ ​is​ ​permitted​ ​as​ ​long​ ​as​ ​the​ ​files​ ​maintain​ ​this​ ​copyright.​ ​Users​ ​are
+​ ​*​ ​permitted​ ​to​ ​modify​ ​this​ ​and​ ​use​ ​it​ ​to​ ​learn​ ​about​ ​the​ ​field​ ​of​ ​embedded
+​ ​*​ ​software.​ Zach Farmer, ​Alex​ ​Fosdick​, and​ ​the​ ​University​ ​of​ ​Colorado​ ​are​ ​not​
+ * ​liable​ ​for ​any​ ​misuse​ ​of​ ​this​ ​material.
+​ ​*
+*****************************************************************************/
+/**
+​ ​*​ ​@file​ ​main.c
+​ ​*​ ​@brief​ ​pThreads example source
+​ ​*
+​ ​*​ ​This is the source file for a three-thread PThreads example demonstrating
+ * syncronous logging, printing, signal handling, file handling,
+ * and CPU utilization stats
+​ ​*
+​ ​*​ ​@author​ ​Zach Farmer
+​ ​*​ ​@date​ ​Feb 18 2018
+​ ​*​ ​@version​ ​1.0
+​ ​*
+​ ​*/
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,15 +28,18 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include <stdarg.h>     /* va_list, va_start, va_arg, va_end */
+#include <stdarg.h>
 #include <sys/syscall.h>
 #include "dll.h"
 
 #define FILEPATH "log.txt"
 #define FILEPATH2 "random.txt"
+#define FILEPATH3 "/proc/stat"
+
 struct info{
 	char * logfile;
 	char * infile;
+	char * procstat;
 };
 
 static FILE *fp;
@@ -24,7 +50,18 @@ static pthread_t thread2;
 static pthread_mutex_t printf_mutex;
 static pthread_mutex_t log_mutex;
 
-int sync_printf(const char *format, ...)
+/**
+​ ​*​ ​@brief​ ​Synchronous encapsulator for printf
+​ ​*
+​ ​*​ ​Mutexes printf for asynchronous call protection
+ * among multiple threads
+​ ​*
+​ ​*​ ​@param​ ​format print formatting
+ * @param ... variadic arguments for print (char *, char, etc)
+​ *
+​ ​*​ ​@return​ void
+​ ​*/
+void sync_printf(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -36,21 +73,48 @@ int sync_printf(const char *format, ...)
     va_end(args);
 }
 
+/**
+​ ​*​ ​@brief​ ​Signal handler for this program
+​ ​*
+​ ​*​ ​handles SIGUSR1 and SIGUSR2 signals,
+ * which exit all child threads
+​ ​*
+​ ​*​ ​@param​ ​sig received signal
+​ *
+​ ​*​ ​@return​ void
+​ ​*/
 void sig_handler(int sig)
 {
-  if (sig == SIGINT)
-    printf("SIGINT\n");
 
+    if (sig == SIGUSR1)
+    {
+        //exit threads. Cannot distinguish between threads when force-sending signals
+        sync_logwrite(FILEPATH,"Received SIGUSR1");
+        //thread-specific handling in thread_join component of main
+        pthread_cancel(thread1);
+        pthread_cancel(thread2);
+    }
 
-  if (sig == SIGUSR1 || SIGUSR2)
-	//exit threads. Cannot distinguish between threads when force-sending signals
-	sync_logwrite(FILEPATH,"Received SIGUSR1");
-	pthread_cancel(thread1);
-	pthread_cancel(thread2);
+    if (sig == SIGUSR2)
+    {
+        //exit threads. Cannot distinguish between threads when force-sending signals
+        sync_logwrite(FILEPATH,"Received SIGUSR2");
+        //thread-specific handling in thread_join component of main
+        pthread_cancel(thread1);
+        pthread_cancel(thread2);
+    }
+
 
 }
 
-
+/**
+​ ​*​ ​@brief​ ​Synchronous time-tagging function
+​ ​*
+​ ​*​ ​Synchronously prints a timestamp to the console
+​ ​*
+​ ​*​ ​@param​ msg message to accompany timestamp
+​ ​*​ ​@return​ void
+​ ​*/
 int sync_timetag(char * msg)
 {
     time_t timer;
@@ -67,6 +131,17 @@ int sync_timetag(char * msg)
     return 0;
 }
 
+/**
+​ ​*​ ​@brief​ Tracks alphanumeric characters into counting bins
+​ ​*
+​ ​*​ ​Mutexes printf for asynchronous call protection
+ * among multiple threads
+​ ​*
+​ ​*​ ​@param​ ch char to track
+ * @param arr storage structure for counted bins
+​ *
+​ ​*​ ​@return​ void
+​ ​*/
 int chartrack(char ch, int * arr)
 {
     if(ch>96 && ch<123)
@@ -88,7 +163,14 @@ int chartrack(char ch, int * arr)
     }
 }
 
-
+/**
+​ ​*​ ​@brief​ ​Synchronous logging call for thread and POSIX Ids
+​ ​*
+​ ​*​ ​@param​ ​filename filename of log
+ * @param thread name of present thread (as char *)
+​ *
+​ ​*​ ​@return​ void
+​ ​*/
 int sync_log_id(char* filename, char* thread)
 {
     pthread_mutex_lock(&log_mutex);
@@ -111,6 +193,18 @@ int sync_log_id(char* filename, char* thread)
 
     return 0;
 }
+
+/**
+​ ​*​ ​@brief​ ​Synchronous logging call
+​ ​*
+​ ​*​ ​logs synchonously to specified file
+​ ​*
+​ ​*​ ​@param​ ​filename of log
+ * @param name of thread thread currently logging
+ * @param log text to log
+​ *
+​ ​*​ ​@return​ void
+​ ​*/
 int sync_logwrite(char* filename, char* thread, char* log)
 {
     pthread_mutex_lock(&log_mutex);
@@ -130,7 +224,17 @@ int sync_logwrite(char* filename, char* thread, char* log)
 
     return 0;
 }
-/* this function is run by the second thread */
+/**
+​ ​*​ ​@brief​ ​child thread 1
+​ ​*
+​ ​*​ ​This child thread sorts an input random text file
+ * from a doubly linked list and prints any characters
+ * occurring more than 3 times to the console
+​ ​*
+​ ​*​ ​@param​ ​nfo info struct containing filenames for reading and logging
+​ *
+​ ​*​ ​@return​ void
+​ ​*/
 void *thread1_fnt(struct info *nfo)
 {
     sync_logwrite(nfo->logfile,"Thread 1","Thread 1");
@@ -191,63 +295,82 @@ void *thread1_fnt(struct info *nfo)
     return NULL;
 }
 
-
-/* this function is run by the second thread */
+/**
+​ ​*​ ​@brief​ ​child thread 2
+​ ​*
+​ ​*​ ​This child thread reports CPU utilization to the console on 100ms intervals
+​ ​*
+​ ​*​ ​@param​ ​nfo info struct containing filenames for reading usage stats
+​ *
+​ ​*​ ​@return​ void
+​ ​*/
 void *thread2_fnt(struct info *nfo)
 {
 
-//sync_printf("In  Thread 2\n");
 sync_logwrite(nfo->logfile,"Thread 2","Thread 2");
 sync_log_id(nfo->logfile,"Thread 2");
 
-long double a[4], b[4], loadavg;
 FILE *fp2;
-char dump[50];
+long double first[4], second[4], loadavg;
 
 struct timespec tim, tim2;
 tim.tv_sec = 0;
-tim.tv_nsec = 100000000l;
+tim.tv_nsec = 100000000l; //100ms
 
 while(1)
 {
-    //using difference method
-    fp2 = fopen("/proc/stat","r");
-    fscanf(fp2,"%*s %Lf %Lf %Lf %Lf",&a[0],&a[1],&a[2],&a[3]);
+    //using difference method for reading CPU usage from proc/stat
+    fp2 = fopen(nfo->procstat,"r");
+    fscanf(fp2,"%*s %Lf %Lf %Lf %Lf",&first[0],&first[1],&first[2],&first[3]);
     fclose(fp2);
     nanosleep(&tim , &tim2);
 
-    fp2 = fopen("/proc/stat","r");
-    fscanf(fp2,"%*s %Lf %Lf %Lf %Lf",&b[0],&b[1],&b[2],&b[3]);
+    fp2 = fopen(nfo->procstat,"r");
+    fscanf(fp2,"%*s %Lf %Lf %Lf %Lf",&second[0],&second[1],&second[2],&second[3]);
     fclose(fp2);
 
-    loadavg = 100*((b[0]+b[1]+b[2]) - (a[0]+a[1]+a[2])) / ((b[0]+b[1]+b[2]+b[3]) - (a[0]+a[1]+a[2]+a[3]));
+    loadavg = 100*((second[0]+second[1]+second[2]) - (first[0]+first[1]+first[2])) / ((second[0]+second[1]+second[2]+second[3]) - (first[0]+first[1]+first[2]+first[3]));
     sync_printf("CPU: %Lf\%\n",loadavg);
 }
 
-//return(0);
 return NULL;
 
 }
 
+/**
+​ ​*​ ​@brief​ main
+​ ​*
+​ ​*​ Begins logging, calls child threads, synchonously
+ * waits until child thread completion to continue,
+ * initializes signal handlers, mutexes, and info object
+​ ​*
+​ ​*​ ​
+​ ​*​ ​@return​ void
+​ ​*/
 int main()
 {
+    //attach signal handlers
     if (signal(SIGUSR1, sig_handler) == SIG_ERR)
-    printf("\ncan't catch SIGUSR1\n");
+    printf("Error: Can't catch SIGUSR1\n");
 
     if (signal(SIGUSR2, sig_handler) == SIG_ERR)
-    printf("\ncan't catch SIGUSR2\n");
+    printf("Error: Can't catch SIGUSR2\n");
 
+    //initialize mutexes for logging and printing
     pthread_mutex_init(&printf_mutex, NULL);
     pthread_mutex_init(&log_mutex, NULL);
 
+    //create and assign info struct to pass into threads
 	struct info *nfo = (struct info*) malloc(sizeof(struct info));
-
 
 	nfo->infile = FILEPATH2;
 	nfo->logfile = FILEPATH;
+	nfo->procstat= FILEPATH3;
 
     sync_logwrite(nfo->logfile,"Thread Main","Thread Main");
     sync_log_id(nfo->logfile,"Thread Main");
+    sync_timetag("Thread Main Start");
+
 
     /* create a first thread which executes thread1_fnt(&x) */
     sync_timetag("Thread 1 Start");
@@ -292,10 +415,8 @@ int main()
         sync_timetag("Thread 2 End");
     }
 
-    /* show the results - x is now 100 thanks to the second thread */
-    //printf("x: %d, y: %d\n", x, y);
-
-    free(nfo);
+    sync_logwrite(nfo->logfile,"Thread Main","Complete");
+    sync_timetag("Thread Main End");
+    free(nfo); //free nfo struct memory
     return 0;
-
 }
